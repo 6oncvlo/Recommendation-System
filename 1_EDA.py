@@ -11,6 +11,7 @@ EDA (Exploratory Data Analysis)
 
 """
 
+
 print('DATASET users\n')
 print(users.info())
 display(users)
