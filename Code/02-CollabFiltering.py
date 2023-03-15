@@ -11,17 +11,18 @@ def dataSplit(ratings,ptest):
         - validation dataset is within training dataset   """
     
     dtrain,dtest=train_test_split(ratings,
-                                  test_size=ptest, random_state=123, shuffle=True)
+                       test_size=ptest, random_state=123, shuffle=True)
     dtest.sort_values(by=['userId','movId'],inplace=True)
     dtrain.sort_values(by=['userId','movId'],inplace=True)
     
-    cv=np.repeat( range(1,int(ptest**(-1))+1), np.floor(dtrain.shape[0]*ptest) )
-    cv=np.concatenate((cv,np.random.choice(range(1,int(ptest**(-1))+1), size=dtrain.shape[0]-cv.shape[0], replace=False)))
+    k=10
+    cv=np.repeat( range(1,k+1), np.floor(dtrain.shape[0]/k) )
+    cv=np.concatenate((cv,np.random.choice(range(1,k+1), size=dtrain.shape[0]-cv.shape[0], replace=False)))
     np.random.shuffle(cv)
     dtrain['cvSplit']=cv
     
     aux=ratings.groupby('movId').userId.count().reset_index().merge(
-      dtrain.groupby('movId').userId.count().reset_index(), how='left', on='movId')
+        dtrain.groupby('movId').userId.count().reset_index(), how='left', on='movId')
     print('Highest % of ratings used from a certain movie in the test dataset is :',
           np.round(100-(aux.userId_y/aux.userId_x*100).min(),1),'%')
     aux=ratings.groupby('userId').movId.count().reset_index().merge(
@@ -35,8 +36,7 @@ def dataSplit(ratings,ptest):
 def simMatrix(ratings, mncmr):
     
     start=time.time()
-    """
-    compute similarity matrix using surprise API   """
+    #compute similarity matrix using surprise package
     aux=ratings.copy()
     aux['userRat'] = list(zip(aux.userId, aux.rating))
     simUsers={}
@@ -54,7 +54,7 @@ def simMatrix(ratings, mncmr):
 def neighborhood(sim, nnei, simMin):
     
     """
-    Compute neighborhoods & exclude non correlated neighbors.
+    2.2 Compute neighborhoods & exclude non correlated neighbors.
     Compute users where CF will be applied. """
     nu=sim.shape[0]
     start=time.time()
@@ -82,7 +82,7 @@ def itemsToPredict(rmatrix, viz, cfUsers):
                           ))
               for u in cfUsers]
 
-    print('Movies prediction computation time (secs): ',np.round(time.time()-start,1))
+    print('Movies to predict computation time (secs): ',np.round(time.time()-start,1))
     
     return movPred
 
@@ -106,7 +106,7 @@ def itemsPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix):
         pred.append(predU)
         
     pred=[p+np.nanmean(rmatrix[u]) for p,u in zip(pred,cfUsers)]
-    print('Ratings prediction computation time (secs)       : ', np.round(time.time()-start,1),'\n')
+    print('Prediction computation time (secs)       : ', np.round(time.time()-start,1),'\n')
     
     return pred
 
@@ -118,11 +118,10 @@ def collabFiltering(sim, nnei, simMin, rmatrix, rmatrixMC):
     # 2.3 Compute movies to predict
     movPred=itemsToPredict(rmatrix, viz, cfUsers)
 
-    # 2.4 Predict ratings
+    # 2.4 Predict ratings and get top nri recommendations
     pred =itemsPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix)
     
     return pd.DataFrame({'userId':np.repeat(cfUsers,[len(mo) for mo in movPred]),
                          'movId':np.hstack(movPred), 'ratingPred':np.hstack(pred)}), cfUsers, ncfUsers
     
-    
-    
+
