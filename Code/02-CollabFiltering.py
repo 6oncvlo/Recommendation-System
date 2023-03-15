@@ -118,7 +118,7 @@ def collabFiltering(sim, nnei, simMin, rmatrix, rmatrixMC):
     # 2.3 Compute movies to predict
     movPred=itemsToPredict(rmatrix, viz, cfUsers)
 
-    # 2.4 Predict ratings and get top nri recommendations
+    # 2.4 Predict ratings
     pred =itemsPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix)
     
     return pd.DataFrame({'userId':np.repeat(cfUsers,[len(mo) for mo in movPred]),
