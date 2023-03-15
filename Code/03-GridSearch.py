@@ -10,15 +10,19 @@ def GSearch(ratings, ptest, crossValid):
     
     """
     
+    mncmrSpace=np.arange(45,50,5)
+    nneiSpace=np.arange(40,50,5)
+    simMinSpace=np.arange(0.5,0.6,0.1)
+    
     #Split original dataset in training and test
     dtrain, dtest = dataSplit(ratings,ptest)
     
     if crossValid==True:
         
         erro={}
-        for mncmr in np.arange(45,50,5):
-            for nnei in np.arange(40,50,5):
-                for simMin in np.arange(0.5,0.6,0.1):
+        for mncmr in mncmrSpace:
+            for nnei in nneiSpace:
+                for simMin in simMinSpace:
                     
                     NRMSE=[]
                     NMAE=[]
@@ -71,9 +75,9 @@ def GSearch(ratings, ptest, crossValid):
         rmatrixMC = rmatrix-np.nanmean(rmatrix, axis=1, keepdims=True)
         
         erro={}
-        for mncmr in np.arange(30,50,5):
-            for nnei in np.arange(40,60,5):
-                for simMin in np.arange(0.5,0.7,0.1):
+        for mncmr in mncmrSpace:
+            for nnei in nneiSpace:
+                for simMin in simMinSpace:
                     
                     # 2.1 Compute similarity matrix
                     sim=simMatrix(dtrain, mncmr)            
@@ -120,7 +124,7 @@ def GSearch(ratings, ptest, crossValid):
                            'dtest Hit Rate (%)': np.round(100*hitRateTest.userId.nunique()/len(cfUsers))
                           }
                     erro[(mncmr, nnei, simMin)]=erroP
-                    print((mncmr, nnei, simMin),'\n',erroP,'\n'*2)
-
+                    print('param done')
+                    
         return dtrain, dvald, dtest, erro
 
