@@ -10,8 +10,8 @@ def dataSplit(ratings,ptest):
         - Hold Out or Cross validation 
         - validation dataset is within training dataset   """
     
-    dtrain,dtest=train_test_split(ratings,
-                       test_size=ptest, random_state=123, shuffle=True)
+    dtrain,dtest=sklearn.model_selection.train_test_split(ratings,
+                                                          test_size=ptest, random_state=123, shuffle=True)
     dtest.sort_values(by=['userId','movId'],inplace=True)
     dtrain.sort_values(by=['userId','movId'],inplace=True)
     
@@ -35,8 +35,10 @@ def dataSplit(ratings,ptest):
 
 def simMatrix(ratings, mncmr):
     
+    """
+    Compute similarity matrix using surprise package """
+    
     start=time.time()
-    #compute similarity matrix using surprise package
     aux=ratings.copy()
     aux['userRat'] = list(zip(aux.userId, aux.rating))
     simUsers={}
@@ -54,8 +56,9 @@ def simMatrix(ratings, mncmr):
 def neighborhood(sim, nnei, simMin):
     
     """
-    2.2 Compute neighborhoods & exclude non correlated neighbors.
+    Compute neighborhoods & exclude non correlated neighbors.
     Compute users where CF will be applied. """
+    
     nu=sim.shape[0]
     start=time.time()
     viz=[[np.sort(np.argpartition(sim[u], -nnei)[-nnei:]) 
@@ -76,6 +79,10 @@ def neighborhood(sim, nnei, simMin):
     
 def itemsToPredict(rmatrix, viz, cfUsers):
     
+    """
+    The items to predict for the user u are all the rated items
+    on his/her neighborhood minus the rated items by the user u """
+    
     start=time.time()
     movPred=[np.sort(list(set(np.where((~np.isnan(rmatrix[viz[u],:])).sum(axis=0)!=0)[-1]) -
                            set(np.where(~np.isnan(rmatrix[u,:]))[-1]) 
@@ -87,7 +94,7 @@ def itemsToPredict(rmatrix, viz, cfUsers):
     return movPred
 
 
-def itemsPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix):
+def RatingPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix):
     
     start=time.time()
     pred=[]
@@ -119,9 +126,7 @@ def collabFiltering(sim, nnei, simMin, rmatrix, rmatrixMC):
     movPred=itemsToPredict(rmatrix, viz, cfUsers)
 
     # 2.4 Predict ratings and get top nri recommendations
-    pred =itemsPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix)
+    pred =RatingPredictions(rmatrixMC, cfUsers, movPred, viz, sim, rmatrix)
     
     return pd.DataFrame({'userId':np.repeat(cfUsers,[len(mo) for mo in movPred]),
                          'movId':np.hstack(movPred), 'ratingPred':np.hstack(pred)}), cfUsers, ncfUsers
-    
-
