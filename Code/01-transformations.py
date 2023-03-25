@@ -1,11 +1,9 @@
 """ movies dataset transformations """
-aux=ratings.groupby('movieId').userId.count().reset_index()
-aux.rename(columns={'userId':'nRatings'},inplace=True)
+aux=ratings.groupby('movieId').userId.count().reset_index().rename(columns={'userId':'nRatings'})
 movies=movies.merge(aux, how='left',on='movieId')
 movies.nRatings.fillna(0,inplace=True)
 movies.nRatings=movies.nRatings.astype(int)
-movies.sort_values(by=['nRatings'],ascending=[False],inplace=True)
-movies.reset_index(inplace=True)
+movies=movies.sort_values(by=['nRatings'],ascending=[False]).reset_index()
 movies['movId']=movies.index
 movies=movies[['movieId','movId','title','nRatings','genres']]
 
@@ -15,29 +13,23 @@ movies=movies[['movieId','movId','title','nRatings','genres']]
 movDetails.crew=movDetails.crew.apply(ast.literal_eval)
 movDetails.cast=movDetails.cast.apply(ast.literal_eval)
 movDetails.tags=movDetails.tags.apply(lambda x: x[1:-1].replace("'","").split(','))
-movDetails=movDetails.merge(movies[['movId','title']], how='left', left_on='titleM',right_on='title')
-movDetails.drop(columns=['title_y'], inplace=True)
-movDetails.rename(columns={'title_x':'title'}, inplace=True)
-
+movDetails=movDetails.merge(movies[['movId','title']], how='left', left_on='titleM',right_on='title').drop(
+    columns=['title_y']).rename(columns={'title_x':'title'})
 aux=movies['genres'].str.split('|',expand=True)
 aux['title']=movies.title
 aux=pd.melt(aux,id_vars='title',value_name='genre')
-aux=aux[['title','genre']]
-aux.dropna(inplace=True)
+aux=aux[['title','genre']].dropna()
 aux['val']=1
 aux=aux.set_index(['title','genre']).val.unstack().fillna(0)
-display
 movDetails=movDetails.merge(aux, how='left', left_on='titleM',right_on=aux.index)
 
 
 
 """ ratings dataset transformations """
-ratings=ratings.merge(movies[['movieId','movId']],how='left', on='movieId')
-ratings=ratings[['userId','movId','rating','timestamp']]
+ratings=ratings.merge(movies[['movieId','movId']],how='left', on='movieId')[['userId','movId','rating','timestamp']]
 ratings['timestamp'] = pd.to_datetime(ratings['timestamp'],unit='s')
 ratings.userId=ratings.userId-1
-ratings.sort_values(by=['userId','movId'], inplace=True)
-ratings.reset_index(drop=True, inplace=True)
+ratings=ratings.sort_values(by=['userId','movId']).reset_index(drop=True)
 
 
 
@@ -76,5 +68,4 @@ aux={
     50:  "50-55",
     56:  "56+"
 }
-users=users.merge(pd.DataFrame(aux.items(),columns=['age','ageT']), how='left', on='age')
-users=users[['userId', 'gender','age','ageT','job','jobT','zipcode']]
+users=users.merge(pd.DataFrame(aux.items(),columns=['age','ageT']), how='left', on='age')[['userId', 'gender','age','ageT','job','jobT','zipcode']]
