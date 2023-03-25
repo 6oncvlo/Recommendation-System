@@ -10,9 +10,9 @@ def GSearch(ratings, ptest, crossValid):
     
     """
     
-    mncmrSpace=np.arange(45,50,5)
-    nneiSpace=np.arange(40,50,5)
-    simMinSpace=np.arange(0.5,0.6,0.1)
+    mncmrSpace=np.arange(25,45,5)
+    nneiSpace=np.arange(30,50,5)
+    simMinSpace=np.arange(0.5,0.7,0.1)
     
     #Split original dataset in training and test
     dtrain, dtest = dataSplit(ratings,ptest)
@@ -126,5 +126,5 @@ def GSearch(ratings, ptest, crossValid):
                     erro[(mncmr, nnei, simMin)]=erroP
                     print('param done')
                     
-        return dtrain, dvald, dtest, erro
+        return dtrain, dtest, erro
 
